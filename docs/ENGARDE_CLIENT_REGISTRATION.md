@@ -6,7 +6,9 @@ Flora is registered against En Garde's authorization server
 (`EnGardeHQ/engarde-api`, deployed at `https://api.engardehq.com`) as a
 **first-party** client (`is_first_party: true` — the flag `engarde-api`
 reserves for EnGarde-owned apps). The registering superuser account is
-**cope@passbook.vc**.
+**cope@engarde.media** (the En Garde platform super admin — distinct from
+cope@passbook.vc, which is the Flora-side identity and has no account in
+En Garde's user database).
 
 ## Deployment prerequisites
 
@@ -25,9 +27,9 @@ and must be deployed before the call below succeeds:
 ## Getting the superuser JWT
 
 ```bash
-ENGARDE_SUPERUSER_JWT=$(curl -sS https://api.engarde.media/auth/login \
+ENGARDE_SUPERUSER_JWT=$(curl -sS https://api.engarde.media/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email": "cope@passbook.vc", "password": "<password>"}' \
+  -d '{"email": "cope@engarde.media", "password": "<password>"}' \
   | jq -r '.access_token')
 ```
 
@@ -44,10 +46,10 @@ curl -sS https://api.engardehq.com/v1/oauth/clients \
     "redirect_uris": [
       "https://flora.passbook.vc/api/v1/integrations/engarde/callback"
     ],
-    "scope": "campaigns:read campaigns:write analytics:read audiences:read assets:read",
+    "scope": "campaigns:read campaigns:write analytics:read audiences:read assets:read offline_access",
     "website": "https://flora.passbook.vc",
     "organization_name": "En Garde Inc",
-    "email": "cope@passbook.vc",
+    "email": "cope@engarde.media",
     "is_first_party": true
   }'
 ```
