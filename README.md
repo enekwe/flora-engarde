@@ -26,10 +26,9 @@ An Express service that will own:
 
 ## Status
 
-**Epoch 2 (Auth & Identity Bridge) is implemented.** The OAuth 2.0 + PKCE
-flow against `engarde-api` is built and unit-tested. Epoch 3 proxy
-controllers (campaigns / audiences / assets / analytics) are next — see
-the roadmap doc for sequencing.
+**Epochs 2 (Auth & Identity Bridge) and 3 (Backend Proxy & Data Sync) are
+implemented** and unit-tested. Epoch 4 (native Flora frontend pages +
+sidebar entry) is next — see the roadmap doc for sequencing.
 
 ### Endpoints
 
@@ -40,6 +39,12 @@ the roadmap doc for sequencing.
 | `GET` | `/api/v1/engarde/oauth/callback` | state param | Exchange code → store encrypted per-fund tokens → return to Flora |
 | `GET` | `/api/v1/engarde/oauth/status` | Flora JWT | Is this fund connected? |
 | `DELETE` | `/api/v1/engarde/oauth/connection` | Flora JWT | Revoke at En Garde (RFC 7009) + delete locally |
+| `GET/POST` | `/api/v1/engarde/campaigns` | Flora JWT + fund | List / create campaigns |
+| `GET/PATCH/DELETE` | `/api/v1/engarde/campaigns/:id` | Flora JWT + fund | Read / update / delete a campaign |
+| `GET` | `/api/v1/engarde/audiences[/:id]` | Flora JWT + fund | List / read audiences |
+| `GET` | `/api/v1/engarde/assets[/:id]` | Flora JWT + fund | List / read assets |
+| `GET` | `/api/v1/engarde/analytics/dashboard` | Flora JWT + fund | Aggregated dashboard metrics |
+| `GET` | `/api/v1/engarde/analytics/campaigns/:id/metrics` | Flora JWT + fund | Per-campaign metrics |
 
 Callers are authenticated by their **Flora session JWT** (shared
 `JWT_SECRET`); only `gp`, `admin`, and `portfolio_company` roles are
@@ -47,6 +52,14 @@ admitted, matching the sidebar's GP-view exposure. En Garde tokens are
 stored **AES-256-GCM encrypted, one connection per fund**
 (`EngardeConnection`); the PKCE `code_verifier` is held server-side in a
 short-lived TTL record (`EngardeOAuthState`) and never sent to the browser.
+
+The proxy layer resolves the caller's **own fund** token from their signed
+JWT (never a request parameter), so a GP/Founder can only reach their own
+fund's En Garde data. Access tokens are **auto-refreshed** on demand; if a
+token is expired and unrefreshable the proxy returns `401
+engarde_reconnect_required`, and an unconnected fund returns `409
+engarde_not_connected` — both are signals the frontend uses to show the
+connect CTA.
 
 ## Local development
 
