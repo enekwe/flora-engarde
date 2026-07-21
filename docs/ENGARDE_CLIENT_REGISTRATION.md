@@ -5,12 +5,31 @@ Roadmap reference: `Flora_EG_Integration_roadmap.md` US-2.1.1 (in `passbook-flor
 Flora is registered against En Garde's authorization server
 (`EnGardeHQ/engarde-api`, deployed at `https://api.engardehq.com`) as a
 **first-party** client (`is_first_party: true` — the flag `engarde-api`
-reserves for EnGarde-owned apps). First-party registration requires a
-**superuser** JWT from En Garde's production-backend auth system, and
-requires the `engarde-api` deployment to include the
-`feat(oauth): allow superusers to register first-party clients via API`
-commit (branch `claude/en-garde-gp-founder-integration-7e9jry`) — before
-that commit, the endpoint silently forced `is_first_party` to `false`.
+reserves for EnGarde-owned apps). The registering superuser account is
+**cope@passbook.vc**.
+
+## Deployment prerequisites
+
+Both fixes live on branch `claude/en-garde-gp-founder-integration-7e9jry`
+and must be deployed before the call below succeeds:
+
+1. **engarde-api** — `feat(oauth): allow superusers to register
+   first-party clients via API`. Before this, the endpoint silently
+   forced `is_first_party` to `false`.
+2. **production-backend** — `fix(auth): include is_superuser claim in
+   access and refresh tokens`. Before this, no token carried the
+   `is_superuser` claim engarde-api authorizes from, so even a real
+   superuser got 403. Log in **after** this deploys — older tokens
+   never gain the claim.
+
+## Getting the superuser JWT
+
+```bash
+ENGARDE_SUPERUSER_JWT=$(curl -sS https://api.engarde.media/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "cope@passbook.vc", "password": "<password>"}' \
+  | jq -r '.access_token')
+```
 
 ## The registration call
 
