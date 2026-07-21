@@ -1,0 +1,33 @@
+{
+  "name": "flora-engarde",
+  "version": "0.1.0",
+  "description": "Flora microservice bridging GP/Founder/Admin GP-view users to the En Garde Marketing Suite API",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest --coverage"
+  },
+  "keywords": ["engarde", "marketing", "microservice", "flora"],
+  "author": "Flora Platform",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.7.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.5.1",
+    "morgan": "^1.10.0",
+    "winston": "^3.13.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.4",
+    "supertest": "^6.3.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
