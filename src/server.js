@@ -12,7 +12,8 @@ const app = express();
 
 app.use(helmet());
 app.use(cors({ origin: config.ALLOWED_ORIGINS }));
-app.use(express.json());
+// Keep the raw body for webhook HMAC verification (US-3.1.5).
+app.use(express.json({ verify: (req, _res, buf) => { req.rawBody = buf; } }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
 

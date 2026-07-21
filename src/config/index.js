@@ -15,7 +15,7 @@ const getPort = () => {
 
 // offline_access is required for engarde-api to issue a refresh token
 // (see engarde-api oauth.py: refresh token only issued when scope includes it)
-const DEFAULT_SCOPES = 'campaigns:read campaigns:write analytics:read audiences:read assets:read offline_access';
+const DEFAULT_SCOPES = 'campaigns:read campaigns:write analytics:read audiences:read assets:read assets:write offline_access';
 
 module.exports = {
   NODE_ENV: process.env.NODE_ENV || 'development',
@@ -34,6 +34,12 @@ module.exports = {
   // authenticate GP/Founder/Admin callers to this microservice.
   JWT_SECRET: process.env.JWT_SECRET,
   INTERNAL_SERVICE_TOKEN: process.env.INTERNAL_SERVICE_TOKEN,
+
+  // Webhook ingestion (US-3.1.5): HMAC-SHA256 shared secret for X-Engarde-Signature
+  ENGARDE_WEBHOOK_SECRET: process.env.ENGARDE_WEBHOOK_SECRET,
+
+  // Analytics cache TTL (US-3.1.4)
+  ANALYTICS_CACHE_TTL_SECONDS: process.env.ANALYTICS_CACHE_TTL_SECONDS || '60',
 
   // AES-256-GCM key (64 hex chars = 32 bytes) for the per-fund token vault
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,

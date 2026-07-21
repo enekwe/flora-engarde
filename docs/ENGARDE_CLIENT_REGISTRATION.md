@@ -46,7 +46,7 @@ curl -sS https://api.engardehq.com/v1/oauth/clients \
     "redirect_uris": [
       "https://flora.passbook.vc/api/v1/integrations/engarde/callback"
     ],
-    "scope": "campaigns:read campaigns:write analytics:read audiences:read assets:read offline_access",
+    "scope": "campaigns:read campaigns:write analytics:read audiences:read assets:read assets:write offline_access",
     "website": "https://flora.passbook.vc",
     "organization_name": "En Garde Inc",
     "email": "cope@engarde.media",

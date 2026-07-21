@@ -85,3 +85,34 @@ describe('happy-path proxy', () => {
     expect(res.body.success).toBe(false);
   });
 });
+
+describe('asset upload passthrough', () => {
+  it('forwards a multipart upload with the fund token', async () => {
+    connectionService.getValidAccessToken.mockResolvedValue('access-abc');
+    api.postMultipart = jest.fn().mockResolvedValue({ id: 'asset-1' });
+
+    const res = await request(app)
+      .post('/api/v1/integrations/engarde/assets')
+      .set(auth(gp()))
+      .field('name', 'Logo')
+      .attach('file', Buffer.from('fake-image-bytes'), 'logo.png');
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.id).toBe('asset-1');
+    expect(api.postMultipart).toHaveBeenCalledWith(
+      '/api/v1/assets',
+      'access-abc',
+      expect.objectContaining({ originalname: 'logo.png' }),
+      expect.objectContaining({ name: 'Logo' })
+    );
+  });
+
+  it('400s when no file is attached', async () => {
+    connectionService.getValidAccessToken.mockResolvedValue('access-abc');
+    const res = await request(app)
+      .post('/api/v1/integrations/engarde/assets')
+      .set(auth(gp()))
+      .field('name', 'NoFile');
+    expect(res.status).toBe(400);
+  });
+});

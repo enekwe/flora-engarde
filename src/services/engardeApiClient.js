@@ -41,6 +41,18 @@ class EngardeApiClient {
   post(path, accessToken, data) {
     return this.request('post', path, accessToken, { data });
   }
+  /**
+   * Multipart upload passthrough (US-3.1.3). `file` is a multer memory-storage
+   * file ({ buffer, originalname, mimetype }); `fields` are extra form fields.
+   */
+  postMultipart(path, accessToken, file, fields = {}) {
+    const form = new FormData();
+    form.append('file', new Blob([file.buffer], { type: file.mimetype }), file.originalname);
+    for (const [key, value] of Object.entries(fields)) {
+      if (value != null && value !== '') form.append(key, value);
+    }
+    return this.request('post', path, accessToken, { data: form });
+  }
   patch(path, accessToken, data) {
     return this.request('patch', path, accessToken, { data });
   }

@@ -1,10 +1,12 @@
 const express = require('express');
+const multer = require('multer');
 const router = express.Router();
 const floraAuth = require('../middleware/floraAuth');
 const requireFundScope = require('../middleware/fundScope');
 const oauth = require('../controllers/oauthController');
 const c = require('../controllers/proxyControllers');
 const syncLog = require('../controllers/syncLogController');
+const webhooks = require('../controllers/webhooksController');
 
 /**
  * En Garde integration routes, following FLORA_DEVELOPMENT_RULES.md §7.2
@@ -26,6 +28,10 @@ router.post('/disconnect', floraAuth, oauth.disconnect);
 // hold no fund in scope, can still read the platform observability view.
 router.get('/sync-log', floraAuth, syncLog.getSyncLog);
 
+// Webhook ingestion from En Garde — authenticated by HMAC signature over the
+// raw body (X-Engarde-Signature), not a Flora bearer token.
+router.post('/webhooks', webhooks.handleWebhook);
+
 // --- Resource proxies (all require a Flora session + a fund in scope) ---
 router.use(floraAuth, requireFundScope);
 
@@ -40,8 +46,10 @@ router.delete('/campaigns/:id', c.deleteCampaign);
 router.get('/audiences', c.listAudiences);
 router.get('/audiences/:id', c.getAudience);
 
-// Assets
+// Assets — uploads capped at 25MB, held in memory only long enough to forward
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 router.get('/assets', c.listAssets);
+router.post('/assets', upload.single('file'), c.uploadAsset);
 router.get('/assets/:id', c.getAsset);
 
 // Analytics

@@ -26,9 +26,10 @@ An Express service that will own:
 
 ## Status
 
-**Epochs 2 (Auth & Identity Bridge) and 3 (Backend Proxy & Data Sync) are
-implemented** and unit-tested. Epoch 4 (native Flora frontend pages +
-sidebar entry) is next — see the roadmap doc for sequencing.
+**All roadmap epochs (2-7) are implemented** and unit-tested: OAuth+PKCE
+bridge, fund-scoped proxies with short-TTL analytics caching, webhook
+ingestion, sync-log observability, audit classification, and founder
+company scoping. See the roadmap doc in passbook-flora for the epoch map.
 
 ### Endpoints
 
@@ -42,9 +43,12 @@ sidebar entry) is next — see the roadmap doc for sequencing.
 | `GET/POST` | `/api/v1/integrations/engarde/campaigns` | Flora JWT + fund | List / create campaigns |
 | `GET/PATCH/DELETE` | `/api/v1/integrations/engarde/campaigns/:id` | Flora JWT + fund | Read / update / delete a campaign |
 | `GET` | `/api/v1/integrations/engarde/audiences[/:id]` | Flora JWT + fund | List / read audiences |
-| `GET` | `/api/v1/integrations/engarde/assets[/:id]` | Flora JWT + fund | List / read assets |
+| `GET/POST` | `/api/v1/integrations/engarde/assets` | Flora JWT + fund | List / upload assets (multipart, 25MB cap) |
+| `GET` | `/api/v1/integrations/engarde/assets/:id` | Flora JWT + fund | Read an asset |
 | `GET` | `/api/v1/integrations/engarde/analytics/dashboard` | Flora JWT + fund | Aggregated dashboard metrics |
 | `GET` | `/api/v1/integrations/engarde/analytics/campaigns/:id/metrics` | Flora JWT + fund | Per-campaign metrics |
+| `GET` | `/api/v1/integrations/engarde/sync-log` | Flora JWT | Sync history (admin: platform-wide; GP/Founder: own fund) |
+| `POST` | `/api/v1/integrations/engarde/webhooks` | HMAC signature | En Garde push events (X-Engarde-Signature, HMAC-SHA256) |
 
 Callers are authenticated by their **Flora session JWT** (shared
 `JWT_SECRET`); only `gp`, `admin`, and `portfolio_company` roles are
