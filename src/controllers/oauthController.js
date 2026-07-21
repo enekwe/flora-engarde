@@ -5,6 +5,7 @@ const encryption = require('../services/encryptionService');
 const { generateState, generateCodeVerifier } = require('../services/pkce');
 const EngardeConnection = require('../models/EngardeConnection');
 const EngardeOAuthState = require('../models/EngardeOAuthState');
+const audit = require('../services/auditService');
 
 function requireFund(req, res) {
   const fundId = req.floraUser.fundId;
@@ -53,6 +54,7 @@ exports.initiateConnect = async (req, res) => {
       userId: req.floraUser.userId
     });
     const url = oauthClient.buildAuthorizationUrl(state, codeVerifier);
+    audit.record('engarde:connect_initiated', req);
     return res.redirect(url);
   } catch (err) {
     logger.error(`startAuthorization failed: ${err.message}`);
@@ -94,6 +96,9 @@ exports.handleCallback = async (req, res) => {
     );
 
     logger.info('En Garde connection established', { fundId: stored.fundId });
+    // Callback is state-authenticated (no req.floraUser) — synthesize the
+    // audit context from the stored flow. Role unknown here → fund_manager.
+    audit.record('engarde:connected', { floraUser: { userId: stored.userId, fundId: stored.fundId } });
     return back('success');
   } catch (err) {
     logger.error(`handleCallback failed: ${err.message}`);
@@ -149,5 +154,6 @@ exports.disconnect = async (req, res) => {
 
   await EngardeConnection.deleteOne({ fundId });
   logger.info('En Garde connection removed', { fundId });
+  audit.record('engarde:disconnect', req, { fundId });
   return res.json({ success: true, data: { disconnected: true } });
 };

@@ -1,6 +1,7 @@
 const logger = require('../config/logger');
 const api = require('../services/engardeApiClient');
 const { getValidAccessToken } = require('../services/connectionService');
+const audit = require('../services/auditService');
 
 /**
  * Wrap a proxy handler so token resolution + upstream errors are turned into
@@ -36,12 +37,21 @@ exports.listCampaigns = proxy((req, _res, token) => {
 });
 exports.getCampaign = proxy((req, _res, token) =>
   api.get(`/api/v1/campaigns/${encodeURIComponent(req.params.id)}`, token));
-exports.createCampaign = proxy((req, _res, token) =>
-  api.post('/api/v1/campaigns', token, req.body));
-exports.updateCampaign = proxy((req, _res, token) =>
-  api.patch(`/api/v1/campaigns/${encodeURIComponent(req.params.id)}`, token, req.body));
-exports.deleteCampaign = proxy((req, _res, token) =>
-  api.del(`/api/v1/campaigns/${encodeURIComponent(req.params.id)}`, token));
+exports.createCampaign = proxy(async (req, _res, token) => {
+  const result = await api.post('/api/v1/campaigns', token, req.body);
+  audit.record('engarde:campaign_create', req, { campaignId: result?.id });
+  return result;
+});
+exports.updateCampaign = proxy(async (req, _res, token) => {
+  const result = await api.patch(`/api/v1/campaigns/${encodeURIComponent(req.params.id)}`, token, req.body);
+  audit.record('engarde:campaign_update', req, { campaignId: req.params.id });
+  return result;
+});
+exports.deleteCampaign = proxy(async (req, _res, token) => {
+  const result = await api.del(`/api/v1/campaigns/${encodeURIComponent(req.params.id)}`, token);
+  audit.record('engarde:campaign_delete', req, { campaignId: req.params.id });
+  return result;
+});
 
 // ---- Audiences (audiences:read) ----
 exports.listAudiences = proxy((req, _res, token) =>
