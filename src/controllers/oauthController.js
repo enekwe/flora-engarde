@@ -34,11 +34,12 @@ function toConnectionRecord(tokenResponse, { fundId, userId }) {
 }
 
 /**
- * GET /oauth/authorize/start
+ * GET /integrations/engarde/connect
  * Begins the connect flow: mints PKCE + state, persists them, and redirects
  * the GP's browser to En Garde's consent screen.
+ * (FLORA_DEVELOPMENT_RULES.md §7.2 — integration route: connect)
  */
-exports.startAuthorization = async (req, res) => {
+exports.initiateConnect = async (req, res) => {
   const fundId = requireFund(req, res);
   if (!fundId) return;
 
@@ -60,7 +61,7 @@ exports.startAuthorization = async (req, res) => {
 };
 
 /**
- * GET /oauth/callback
+ * GET /integrations/engarde/callback
  * En Garde redirects the browser back here with ?code&state. We look up the
  * stored PKCE verifier, exchange the code, persist the encrypted tokens for
  * the fund, and bounce the user back into Flora.
@@ -101,7 +102,7 @@ exports.handleCallback = async (req, res) => {
 };
 
 /**
- * GET /oauth/status — is this fund connected to En Garde?
+ * GET /integrations/engarde/status — is this fund connected to En Garde?
  */
 exports.getStatus = async (req, res) => {
   const fundId = requireFund(req, res);
@@ -124,13 +125,14 @@ exports.getStatus = async (req, res) => {
 };
 
 /**
- * DELETE /oauth/connection — revoke at En Garde (RFC 7009) and delete locally.
+ * POST /integrations/engarde/disconnect — revoke at En Garde (RFC 7009) and delete locally.
  */
 exports.disconnect = async (req, res) => {
   const fundId = requireFund(req, res);
   if (!fundId) return;
 
-  const conn = await EngardeConnection.findOne({ fundId });
+  // Token fields are select:false (§7.3.2) — opt in explicitly to revoke them.
+  const conn = await EngardeConnection.findOne({ fundId }).select('+accessToken +refreshToken');
   if (!conn) {
     return res.json({ success: true, data: { disconnected: true } });
   }

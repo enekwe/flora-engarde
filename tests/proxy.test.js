@@ -8,7 +8,7 @@ process.env.JWT_SECRET = 'test-jwt-secret';
 process.env.ENCRYPTION_KEY = require('crypto').randomBytes(32).toString('hex');
 process.env.ENGARDE_OAUTH_CLIENT_ID = 'cid';
 process.env.ENGARDE_OAUTH_CLIENT_SECRET = 'sec';
-process.env.ENGARDE_OAUTH_REDIRECT_URI = 'https://flora.passbook.vc/api/v1/engarde/oauth/callback';
+process.env.ENGARDE_OAUTH_REDIRECT_URI = 'https://flora.passbook.vc/api/v1/integrations/engarde/callback';
 
 jest.mock('../src/services/connectionService', () => {
   const actual = jest.requireActual('../src/services/connectionService');
@@ -37,10 +37,10 @@ beforeEach(() => jest.clearAllMocks());
 
 describe('proxy auth & fund scope', () => {
   it('401 without a Flora token', async () => {
-    expect((await request(app).get('/api/v1/engarde/campaigns')).status).toBe(401);
+    expect((await request(app).get('/api/v1/integrations/engarde/campaigns')).status).toBe(401);
   });
   it('400 when the GP has no fund in scope', async () => {
-    const res = await request(app).get('/api/v1/engarde/campaigns').set(auth(gp({ fundId: undefined })));
+    const res = await request(app).get('/api/v1/integrations/engarde/campaigns').set(auth(gp({ fundId: undefined })));
     expect(res.status).toBe(400);
   });
 });
@@ -50,7 +50,7 @@ describe('not-connected handling', () => {
     connectionService.getValidAccessToken.mockRejectedValue(
       new connectionService.NotConnectedError('This fund is not connected to En Garde')
     );
-    const res = await request(app).get('/api/v1/engarde/campaigns').set(auth(gp()));
+    const res = await request(app).get('/api/v1/integrations/engarde/campaigns').set(auth(gp()));
     expect(res.status).toBe(409);
     expect(res.body.code).toBe('engarde_not_connected');
   });
@@ -62,7 +62,7 @@ describe('happy-path proxy', () => {
     api.get.mockResolvedValue({ campaigns: [{ id: 'c1' }], total: 1 });
 
     const res = await request(app)
-      .get('/api/v1/engarde/campaigns?limit=10&status=active')
+      .get('/api/v1/integrations/engarde/campaigns?limit=10&status=active')
       .set(auth(gp()));
 
     expect(res.status).toBe(200);
@@ -80,7 +80,7 @@ describe('happy-path proxy', () => {
     connectionService.getValidAccessToken.mockResolvedValue('access-abc');
     const boom = new Error('rate limited'); boom.status = 429;
     api.get.mockRejectedValue(boom);
-    const res = await request(app).get('/api/v1/engarde/audiences').set(auth(gp()));
+    const res = await request(app).get('/api/v1/integrations/engarde/audiences').set(auth(gp()));
     expect(res.status).toBe(429);
     expect(res.body.success).toBe(false);
   });

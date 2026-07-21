@@ -2,9 +2,25 @@ const express = require('express');
 const router = express.Router();
 const floraAuth = require('../middleware/floraAuth');
 const requireFundScope = require('../middleware/fundScope');
+const oauth = require('../controllers/oauthController');
 const c = require('../controllers/proxyControllers');
 
-// All resource proxies require a Flora session and a fund in scope.
+/**
+ * En Garde integration routes, following FLORA_DEVELOPMENT_RULES.md §7.2
+ * route structure (connect / callback / status / disconnect), mounted by
+ * index.js at /api/v1/integrations/engarde — matching the Carta/HubSpot
+ * reference integrations.
+ */
+
+// --- OAuth connection lifecycle ---
+router.get('/connect', floraAuth, oauth.initiateConnect);
+// Callback is the browser redirect back from En Garde — authenticated by the
+// opaque single-use state param, not a Flora bearer token.
+router.get('/callback', oauth.handleCallback);
+router.get('/status', floraAuth, oauth.getStatus);
+router.post('/disconnect', floraAuth, oauth.disconnect);
+
+// --- Resource proxies (all require a Flora session + a fund in scope) ---
 router.use(floraAuth, requireFundScope);
 
 // Campaigns

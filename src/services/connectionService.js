@@ -29,7 +29,8 @@ class ReconnectRequiredError extends Error {
  * expired and cannot be refreshed (no/invalid refresh token).
  */
 async function getValidAccessToken(fundId) {
-  const conn = await EngardeConnection.findOne({ fundId });
+  // Token fields are select:false (§7.3.2) — opt in explicitly.
+  const conn = await EngardeConnection.findOne({ fundId }).select('+accessToken +refreshToken');
   if (!conn || conn.status !== 'active') {
     throw new NotConnectedError('This fund is not connected to En Garde');
   }

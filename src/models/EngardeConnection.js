@@ -4,6 +4,10 @@ const mongoose = require('mongoose');
  * A GP fund's connection to En Garde. One row per fund (US-2.1.3).
  * Tokens are stored AES-256-GCM encrypted (never plaintext) via
  * encryptionService — this schema only holds the ciphertext envelope.
+ *
+ * Follows FLORA_DEVELOPMENT_RULES.md §7.2 integration model conventions:
+ * multi-tenant identifiers (fund tenancy + connecting user), encrypted
+ * tokens with `select: false`, and a lifecycle `status` enum.
  */
 const encryptedFieldSchema = new mongoose.Schema(
   {
@@ -22,8 +26,10 @@ const engardeConnectionSchema = new mongoose.Schema(
     // Flora user who authorized the connection (audit).
     connectedByUserId: { type: String, required: true },
 
-    accessToken: { type: encryptedFieldSchema, required: true },
-    refreshToken: { type: encryptedFieldSchema, required: false },
+    // OAuth tokens — encrypted at rest, and select:false so they are never
+    // returned by default queries (§7.3.2). Opt in with .select('+accessToken +refreshToken').
+    accessToken: { type: encryptedFieldSchema, required: true, select: false },
+    refreshToken: { type: encryptedFieldSchema, required: false, select: false },
 
     scopes: { type: [String], default: [] },
     tokenType: { type: String, default: 'Bearer' },
@@ -31,7 +37,7 @@ const engardeConnectionSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['active', 'revoked', 'error'],
+      enum: ['active', 'expired', 'disconnected', 'error'],
       default: 'active',
       index: true
     },

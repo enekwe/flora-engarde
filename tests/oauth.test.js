@@ -6,7 +6,7 @@
 process.env.JWT_SECRET = 'test-jwt-secret';
 process.env.ENGARDE_OAUTH_CLIENT_ID = 'test-client';
 process.env.ENGARDE_OAUTH_CLIENT_SECRET = 'test-secret';
-process.env.ENGARDE_OAUTH_REDIRECT_URI = 'https://flora.passbook.vc/api/v1/engarde/oauth/callback';
+process.env.ENGARDE_OAUTH_REDIRECT_URI = 'https://flora.passbook.vc/api/v1/integrations/engarde/callback';
 process.env.ENCRYPTION_KEY = require('crypto').randomBytes(32).toString('hex');
 
 const crypto = require('crypto');
@@ -39,7 +39,7 @@ describe('health', () => {
 
 describe('floraAuth guard', () => {
   const app = makeApp();
-  const path = '/api/v1/engarde/oauth/status';
+  const path = '/api/v1/integrations/engarde/status';
 
   it('401 without a token', async () => {
     expect((await request(app).get(path)).status).toBe(401);

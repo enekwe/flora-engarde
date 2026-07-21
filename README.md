@@ -35,16 +35,16 @@ sidebar entry) is next — see the roadmap doc for sequencing.
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | `GET` | `/health` | none | Liveness |
-| `GET` | `/api/v1/engarde/oauth/authorize/start` | Flora JWT | Begin connect: mint PKCE + state, redirect to En Garde consent |
-| `GET` | `/api/v1/engarde/oauth/callback` | state param | Exchange code → store encrypted per-fund tokens → return to Flora |
-| `GET` | `/api/v1/engarde/oauth/status` | Flora JWT | Is this fund connected? |
-| `DELETE` | `/api/v1/engarde/oauth/connection` | Flora JWT | Revoke at En Garde (RFC 7009) + delete locally |
-| `GET/POST` | `/api/v1/engarde/campaigns` | Flora JWT + fund | List / create campaigns |
-| `GET/PATCH/DELETE` | `/api/v1/engarde/campaigns/:id` | Flora JWT + fund | Read / update / delete a campaign |
-| `GET` | `/api/v1/engarde/audiences[/:id]` | Flora JWT + fund | List / read audiences |
-| `GET` | `/api/v1/engarde/assets[/:id]` | Flora JWT + fund | List / read assets |
-| `GET` | `/api/v1/engarde/analytics/dashboard` | Flora JWT + fund | Aggregated dashboard metrics |
-| `GET` | `/api/v1/engarde/analytics/campaigns/:id/metrics` | Flora JWT + fund | Per-campaign metrics |
+| `GET` | `/api/v1/integrations/engarde/connect` | Flora JWT | Begin connect: mint PKCE + state, redirect to En Garde consent |
+| `GET` | `/api/v1/integrations/engarde/callback` | state param | Exchange code → store encrypted per-fund tokens → return to Flora |
+| `GET` | `/api/v1/integrations/engarde/status` | Flora JWT | Is this fund connected? |
+| `POST` | `/api/v1/integrations/engarde/disconnect` | Flora JWT | Revoke at En Garde (RFC 7009) + delete locally |
+| `GET/POST` | `/api/v1/integrations/engarde/campaigns` | Flora JWT + fund | List / create campaigns |
+| `GET/PATCH/DELETE` | `/api/v1/integrations/engarde/campaigns/:id` | Flora JWT + fund | Read / update / delete a campaign |
+| `GET` | `/api/v1/integrations/engarde/audiences[/:id]` | Flora JWT + fund | List / read audiences |
+| `GET` | `/api/v1/integrations/engarde/assets[/:id]` | Flora JWT + fund | List / read assets |
+| `GET` | `/api/v1/integrations/engarde/analytics/dashboard` | Flora JWT + fund | Aggregated dashboard metrics |
+| `GET` | `/api/v1/integrations/engarde/analytics/campaigns/:id/metrics` | Flora JWT + fund | Per-campaign metrics |
 
 Callers are authenticated by their **Flora session JWT** (shared
 `JWT_SECRET`); only `gp`, `admin`, and `portfolio_company` roles are

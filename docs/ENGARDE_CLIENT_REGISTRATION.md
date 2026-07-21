@@ -42,7 +42,7 @@ curl -sS https://api.engardehq.com/v1/oauth/clients \
     "client_name": "Flora",
     "client_description": "Flora venture OS — native En Garde Marketing Suite integration for GP, Founder, and Admin (GP view) users",
     "redirect_uris": [
-      "https://flora.passbook.vc/api/v1/engarde/oauth/callback"
+      "https://flora.passbook.vc/api/v1/integrations/engarde/callback"
     ],
     "scope": "campaigns:read campaigns:write analytics:read audiences:read assets:read",
     "website": "https://flora.passbook.vc",
@@ -63,7 +63,7 @@ Set on the `flora-engarde` Railway service (Passbook Flora project):
 ```
 ENGARDE_OAUTH_CLIENT_ID=<client_id from response>
 ENGARDE_OAUTH_CLIENT_SECRET=<client_secret from response>
-ENGARDE_OAUTH_REDIRECT_URI=https://flora.passbook.vc/api/v1/engarde/oauth/callback
+ENGARDE_OAUTH_REDIRECT_URI=https://flora.passbook.vc/api/v1/integrations/engarde/callback
 ```
 
 ## Notes

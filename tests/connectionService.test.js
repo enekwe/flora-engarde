@@ -28,19 +28,19 @@ function fakeConn(overrides = {}) {
 beforeEach(() => jest.clearAllMocks());
 
 test('returns the stored token when it is still valid', async () => {
-  EngardeConnection.findOne.mockResolvedValue(fakeConn());
+  EngardeConnection.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(fakeConn()) });
   await expect(getValidAccessToken('fund-1')).resolves.toBe('current-token');
   expect(oauthClient.refreshAccessToken).not.toHaveBeenCalled();
 });
 
 test('throws NotConnected when there is no active connection', async () => {
-  EngardeConnection.findOne.mockResolvedValue(null);
+  EngardeConnection.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(null) });
   await expect(getValidAccessToken('fund-1')).rejects.toBeInstanceOf(NotConnectedError);
 });
 
 test('refreshes an expired token and persists the new one', async () => {
   const conn = fakeConn({ expiresAt: new Date(Date.now() - 1000) });
-  EngardeConnection.findOne.mockResolvedValue(conn);
+  EngardeConnection.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(conn) });
   oauthClient.refreshAccessToken.mockResolvedValue({
     access_token: 'new-token', expires_in: 3600, scope: 'campaigns:read'
   });
@@ -54,14 +54,14 @@ test('refreshes an expired token and persists the new one', async () => {
 
 test('expired with no refresh token requires reconnect', async () => {
   const conn = fakeConn({ expiresAt: new Date(Date.now() - 1000), refreshToken: undefined });
-  EngardeConnection.findOne.mockResolvedValue(conn);
+  EngardeConnection.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(conn) });
   await expect(getValidAccessToken('fund-1')).rejects.toBeInstanceOf(ReconnectRequiredError);
   expect(conn.status).toBe('error');
 });
 
 test('a failed refresh marks the connection errored and requires reconnect', async () => {
   const conn = fakeConn({ expiresAt: new Date(Date.now() - 1000) });
-  EngardeConnection.findOne.mockResolvedValue(conn);
+  EngardeConnection.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(conn) });
   oauthClient.refreshAccessToken.mockRejectedValue(new Error('invalid_grant'));
   await expect(getValidAccessToken('fund-1')).rejects.toBeInstanceOf(ReconnectRequiredError);
   expect(conn.status).toBe('error');
