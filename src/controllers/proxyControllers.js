@@ -2,6 +2,7 @@ const logger = require('../config/logger');
 const api = require('../services/engardeApiClient');
 const { getValidAccessToken } = require('../services/connectionService');
 const audit = require('../services/auditService');
+const syncLog = require('../services/syncLogService');
 
 /**
  * Wrap a proxy handler so token resolution + upstream errors are turned into
@@ -40,16 +41,19 @@ exports.getCampaign = proxy((req, _res, token) =>
 exports.createCampaign = proxy(async (req, _res, token) => {
   const result = await api.post('/api/v1/campaigns', token, req.body);
   audit.record('engarde:campaign_create', req, { campaignId: result?.id });
+  syncLog.recordFromReq(req, 'campaign_create', 'success', `Campaign created${result?.id ? ` (${result.id})` : ''}`);
   return result;
 });
 exports.updateCampaign = proxy(async (req, _res, token) => {
   const result = await api.patch(`/api/v1/campaigns/${encodeURIComponent(req.params.id)}`, token, req.body);
   audit.record('engarde:campaign_update', req, { campaignId: req.params.id });
+  syncLog.recordFromReq(req, 'campaign_update', 'success', `Campaign ${req.params.id} updated`);
   return result;
 });
 exports.deleteCampaign = proxy(async (req, _res, token) => {
   const result = await api.del(`/api/v1/campaigns/${encodeURIComponent(req.params.id)}`, token);
   audit.record('engarde:campaign_delete', req, { campaignId: req.params.id });
+  syncLog.recordFromReq(req, 'campaign_delete', 'success', `Campaign ${req.params.id} deleted`);
   return result;
 });
 

@@ -4,6 +4,7 @@ const floraAuth = require('../middleware/floraAuth');
 const requireFundScope = require('../middleware/fundScope');
 const oauth = require('../controllers/oauthController');
 const c = require('../controllers/proxyControllers');
+const syncLog = require('../controllers/syncLogController');
 
 /**
  * En Garde integration routes, following FLORA_DEVELOPMENT_RULES.md §7.2
@@ -19,6 +20,11 @@ router.get('/connect', floraAuth, oauth.initiateConnect);
 router.get('/callback', oauth.handleCallback);
 router.get('/status', floraAuth, oauth.getStatus);
 router.post('/disconnect', floraAuth, oauth.disconnect);
+
+// Sync/activity log — admin gets the platform-wide view, GP/Founder get their
+// own fund's. Has its own access logic (no requireFundScope) so admins, who
+// hold no fund in scope, can still read the platform observability view.
+router.get('/sync-log', floraAuth, syncLog.getSyncLog);
 
 // --- Resource proxies (all require a Flora session + a fund in scope) ---
 router.use(floraAuth, requireFundScope);

@@ -2,6 +2,7 @@ const logger = require('../config/logger');
 const encryption = require('./encryptionService');
 const oauthClient = require('./engardeOAuthClient');
 const EngardeConnection = require('../models/EngardeConnection');
+const syncLog = require('./syncLogService');
 
 // Refresh a little before actual expiry to avoid racing the clock.
 const EXPIRY_BUFFER_MS = 60 * 1000;
@@ -61,11 +62,13 @@ async function getValidAccessToken(fundId) {
     conn.lastRefreshedAt = new Date();
     conn.status = 'active';
     await conn.save();
+    syncLog.record({ fundId, userId: conn.connectedByUserId, action: 'token_refresh', status: 'success', message: 'Access token refreshed' });
     return refreshed.access_token;
   } catch (err) {
     logger.error(`Token refresh failed for fund ${fundId}: ${err.message}`);
     conn.status = 'error';
     await conn.save();
+    syncLog.record({ fundId, userId: conn.connectedByUserId, action: 'token_refresh', status: 'error', message: 'Token refresh failed — reconnect required' });
     throw new ReconnectRequiredError('Could not refresh En Garde session — reconnect required');
   }
 }
