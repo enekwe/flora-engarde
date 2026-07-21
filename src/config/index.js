@@ -20,7 +20,7 @@ module.exports = {
 
   MONGODB_URI: process.env.MONGODB_URI,
 
-  ENGARDE_API_URL: process.env.ENGARDE_API_URL || 'https://api.engarde.com',
+  ENGARDE_API_URL: process.env.ENGARDE_API_URL || 'https://api.engardehq.com',
   ENGARDE_OAUTH_CLIENT_ID: process.env.ENGARDE_OAUTH_CLIENT_ID,
   ENGARDE_OAUTH_CLIENT_SECRET: process.env.ENGARDE_OAUTH_CLIENT_SECRET,
   ENGARDE_OAUTH_REDIRECT_URI: process.env.ENGARDE_OAUTH_REDIRECT_URI,
