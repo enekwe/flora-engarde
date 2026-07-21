@@ -54,8 +54,11 @@ exports.initiateConnect = async (req, res) => {
       fundId,
       userId: req.floraUser.userId
     });
-    const url = oauthClient.buildAuthorizationUrl(state, codeVerifier);
-    audit.record('engarde:connect_initiated', req);
+    // Optional signup hint: Flora users without an En Garde account are sent
+    // to En Garde's registration page instead of login (only 'signup' is honored).
+    const screenHint = req.query.screen_hint === 'signup' ? 'signup' : undefined;
+    const url = oauthClient.buildAuthorizationUrl(state, codeVerifier, screenHint);
+    audit.record('engarde:connect_initiated', req, { screenHint: screenHint || 'login' });
     return res.redirect(url);
   } catch (err) {
     logger.error(`startAuthorization failed: ${err.message}`);

@@ -33,8 +33,10 @@ class EngardeOAuthClient {
    * Build the URL the GP's browser is redirected to in order to grant consent.
    * @param {string} state        opaque CSRF token
    * @param {string} codeVerifier PKCE verifier (challenge is derived here)
+   * @param {string} [screenHint] 'signup' sends account-less users to En
+   *                              Garde's registration page instead of login
    */
-  buildAuthorizationUrl(state, codeVerifier) {
+  buildAuthorizationUrl(state, codeVerifier, screenHint) {
     this._assertConfigured();
     const params = new URLSearchParams({
       response_type: 'code',
@@ -45,6 +47,9 @@ class EngardeOAuthClient {
       code_challenge: deriveCodeChallenge(codeVerifier),
       code_challenge_method: CODE_CHALLENGE_METHOD
     });
+    if (screenHint === 'signup') {
+      params.set('screen_hint', 'signup');
+    }
     return `${this.baseURL}/oauth/authorize?${params.toString()}`;
   }
 
