@@ -45,9 +45,17 @@ module.exports = {
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
 
   // Where to send the GP's browser back to in Flora after the OAuth round-trip
+  // Fallback return domain when the connect flow didn't record a trusted origin.
   FLORA_APP_URL: process.env.FLORA_APP_URL || 'https://flora.passbook.vc',
 
+  // Flora is reachable at both flora.passbook.vc and the FloraHQ.co top-level
+  // domain; all are trusted origins for CORS and the post-OAuth return redirect.
   ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',')
-    : ['https://flora.passbook.vc']
+    : [
+        'https://flora.passbook.vc',
+        'https://florahq.co',
+        'https://www.florahq.co',
+        'https://app.florahq.co',
+      ]
 };
