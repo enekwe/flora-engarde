@@ -48,17 +48,30 @@ exports.initiateConnect = async (req, res) => {
   try {
     const state = generateState();
     const codeVerifier = generateCodeVerifier();
+    // Record the Flora origin the user started from (only if trusted), so the
+    // callback returns them to the same domain — flora.passbook.vc or FloraHQ.co.
+    const requestedOrigin = req.query.return_origin;
+    const returnOrigin = config.ALLOWED_ORIGINS.includes(requestedOrigin)
+      ? requestedOrigin
+      : undefined;
     await EngardeOAuthState.create({
       state,
       codeVerifier,
       fundId,
-      userId: req.floraUser.userId
+      userId: req.floraUser.userId,
+      returnOrigin
     });
     // Optional signup hint: Flora users without an En Garde account are sent
     // to En Garde's registration page instead of login (only 'signup' is honored).
     const screenHint = req.query.screen_hint === 'signup' ? 'signup' : undefined;
     const url = oauthClient.buildAuthorizationUrl(state, codeVerifier, screenHint);
     audit.record('engarde:connect_initiated', req, { screenHint: screenHint || 'login' });
+    // A Bearer-authenticated XHR (the SPA can't send the token on a full-page
+    // navigation) asks for the URL as JSON, then navigates the browser to it.
+    // Direct browser navigations still get a 302 (back-compat).
+    if (req.query.format === 'json') {
+      return res.json({ success: true, data: { url } });
+    }
     return res.redirect(url);
   } catch (err) {
     logger.error(`startAuthorization failed: ${err.message}`);
@@ -74,7 +87,13 @@ exports.initiateConnect = async (req, res) => {
  */
 exports.handleCallback = async (req, res) => {
   const { code, state, error: oauthError } = req.query;
-  const back = (status) => res.redirect(`${config.FLORA_APP_URL}/engarde?connection=${status}`);
+  // Return the browser to the Flora origin the connect started from (validated
+  // against ALLOWED_ORIGINS), falling back to FLORA_APP_URL. Pre-state errors
+  // (no stored flow yet) always use the fallback.
+  const resolveBase = (origin) =>
+    origin && config.ALLOWED_ORIGINS.includes(origin) ? origin : config.FLORA_APP_URL;
+  const back = (status, origin) =>
+    res.redirect(`${resolveBase(origin)}/engarde?connection=${status}`);
 
   if (oauthError) {
     logger.warn(`En Garde authorization denied: ${oauthError}`);
@@ -90,6 +109,7 @@ exports.handleCallback = async (req, res) => {
       logger.warn('Callback with unknown/expired state');
       return back('expired');
     }
+    const returnOrigin = stored.returnOrigin;
 
     const tokenResponse = await oauthClient.exchangeCodeForToken(code, stored.codeVerifier);
 
@@ -104,7 +124,7 @@ exports.handleCallback = async (req, res) => {
     // audit context from the stored flow. Role unknown here → fund_manager.
     audit.record('engarde:connected', { floraUser: { userId: stored.userId, fundId: stored.fundId } });
     syncLog.record({ fundId: stored.fundId, userId: stored.userId, action: 'connect', status: 'success', message: 'En Garde connection established' });
-    return back('success');
+    return back('success', returnOrigin);
   } catch (err) {
     logger.error(`handleCallback failed: ${err.message}`);
     return back('error');
