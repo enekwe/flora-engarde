@@ -29,12 +29,23 @@ function floraAuth(req, res, next) {
     if (!ALLOWED_ROLES.has(role)) {
       return res.status(403).json({ success: false, error: 'Role not permitted for En Garde' });
     }
+
+    // Flora's session JWT is identity-only (id, email, role, permissions) —
+    // it never carries fundId/companyId. Flora's own proxy resolves the
+    // caller's fund/company server-side (from its database) and forwards it
+    // via these headers, authenticated by a shared internal token so a caller
+    // hitting this service directly (bypassing Flora's proxy) can't spoof
+    // scope. Falls back to JWT claims if a future caller puts them there
+    // directly — harmless no-op today, since Flora's JWT never does.
+    const internalToken = req.headers['x-flora-internal-token'];
+    const trustedInternal = Boolean(config.INTERNAL_SERVICE_TOKEN) && internalToken === config.INTERNAL_SERVICE_TOKEN;
+
     req.floraUser = {
       userId: payload.sub || payload.userId || payload.id,
       role,
       // GP/Admin act on a fund; a Founder acts on their company within a fund.
-      fundId: payload.fundId || payload.fund_id || null,
-      companyId: payload.companyId || payload.company_id || null
+      fundId: (trustedInternal && req.headers['x-flora-fund-id']) || payload.fundId || payload.fund_id || null,
+      companyId: (trustedInternal && req.headers['x-flora-company-id']) || payload.companyId || payload.company_id || null
     };
     return next();
   } catch (err) {
